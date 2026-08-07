@@ -42,6 +42,10 @@ public class JdbcTemplate {
 		}
 	}
 
+	public <K> K insert(String sql, Class<K> keyType, Object... params) {
+		throw new UnsupportedOperationException("Method call 'insert' not yet implemented.");
+	}
+
 	private void bind(PreparedStatement ps, Object[] params) throws SQLException {
 		for (int i = 0; i < params.length; i++)
 			ps.setObject(i + 1, params[i]);
