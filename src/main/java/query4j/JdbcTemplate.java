@@ -83,6 +83,10 @@ public class JdbcTemplate {
 		}
 	}
 
+	public <T> T queryValue(String sql, Class<T> type, Object... params) {
+		return queryOne(sql, rs -> rs.getObject(1, type), params);
+	}
+
 	private void bind(PreparedStatement ps, Object[] params) throws SQLException {
 		for (int i = 0; i < params.length; i++)
 			ps.setObject(i + 1, params[i]);
