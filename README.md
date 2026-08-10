@@ -1,6 +1,6 @@
 ---
 title: Query4J
-description: A Jakarta-native, SQL-first, record-friendly JDBC toolkit
+description: A SQL-first, record-friendly JDBC toolkit
 author: RedBeardCodes
 tags: ["java", "jakarta", "jdbc", "sql"]
 ---
