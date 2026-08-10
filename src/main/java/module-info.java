@@ -5,5 +5,4 @@ module query4j {
 	requires transitive java.sql;
 	requires java.naming;
 	requires java.management;
-	requires com.zaxxer.hikari;
 }
