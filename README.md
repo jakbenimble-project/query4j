@@ -1,10 +1,3 @@
----
-title: Query4J
-description: A SQL-first, record-friendly JDBC toolkit
-author: RedBeardCodes
-tags: ["java", "jakarta", "jdbc", "sql"]
----
-
 # Welcome to Query4J
 
 ## Goals
@@ -49,7 +42,7 @@ Assuming that your table looks like this:
 create table users (
   first_name varchar(20),
   last_name varchar(20),
-  email(20)
+  email varchar(20)
 );
 ```
 
@@ -57,7 +50,7 @@ We can add a mapper directly to the User record:
 
 ```java
 public record User(String firstName, String lastName, String email) {
-    static final RowMapper<User> = rs ->
+    static final RowMapper<User> MAPPER = rs ->
         new User(
             rs.getString("first_name"),
             rs.getString("last_name"),
