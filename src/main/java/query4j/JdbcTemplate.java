@@ -87,6 +87,19 @@ public class JdbcTemplate {
 		return queryOne(sql, rs -> rs.getObject(1, type), params);
 	}
 
+	public int[] batchUpdate(String sql, List<Object[]> params) {
+		try (Connection conn = ds.getConnection()) {
+			PreparedStatement ps = conn.prepareStatement(sql);
+			for (Object[] row : params) {
+				bind(ps, row);
+				ps.addBatch();
+			}
+			return ps.executeBatch();
+		} catch (SQLException sqle) {
+			throw new QueryException(sqle);
+		}
+	}
+
 	private void bind(PreparedStatement ps, Object[] params) throws SQLException {
 		for (int i = 0; i < params.length; i++)
 			ps.setObject(i + 1, params[i]);
