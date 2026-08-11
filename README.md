@@ -1,4 +1,4 @@
-# Welcome to Query4J
+# Query4J
 
 ## Goals
 - Framework-agnostic
@@ -29,6 +29,14 @@ If you know SQL, you already know Query4J.
 The framework never generates SQL, never hides database behavior, and never attempts to synchronize object graphs. It exists to remove JDBC boilerplate, not SQL.
 
 ## Quick Start
+
+This project is not yet in Maven Central. Please clone and install locally:
+
+```
+git clone https://github.com/jakbenimble-project/query4j
+cd query4j
+mvn clean install
+```
 
 Models are simply Java records:
 
