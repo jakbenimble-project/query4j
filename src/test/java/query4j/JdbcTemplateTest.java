@@ -1,7 +1,7 @@
 package query4j;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.sql.Connection;
 import java.sql.Statement;
@@ -18,11 +18,11 @@ public class JdbcTemplateTest {
 		Db db = getJdbcTempate();
 		JdbcTemplate jdbc = db.jdbc();
 		List<User> users = jdbc.query("select * from fake_users", User.MAPPER);
-		assert users.size() > 0;
+		assertTrue(users.size() > 0);
 		assertTrue(users.get(0).firstName.equals("olivia"));
 
 		List<User> noResults = jdbc.query("select * from fake_users where first_name = ?", User.MAPPER, "test");
-		assert noResults.size() == 0;
+		assertTrue(noResults.size() == 0);
 		destroyJdbcTemplate(db);
 	}
 
@@ -36,15 +36,15 @@ public class JdbcTemplateTest {
 		String newLastName = "bishop";
 
 		User u = jdbc.queryOne("select * from fake_users where first_name = ?", User.MAPPER, firstName);
-		System.out.println(u);
-		assertTrue(u.lastName().equals(oldLastName),
+		assertTrue(oldLastName.equals(u.lastName()),
 				"The expected lastName value is not correct before update");
 
-		int rowCount = jdbc.update("update fake_users set last_name = ? where first_name = ?", firstName,
-				newLastName);
+		int rowCount = jdbc.update("update fake_users set last_name = ? where first_name = ?", newLastName,
+				firstName);
+		assertEquals(1, rowCount);
+
 		User updated = jdbc.queryOne("select * from fake_users where first_name = ?", User.MAPPER, firstName);
-		System.out.println(updated);
-		assertTrue(updated.lastName().equals("bishop"),
+		assertTrue(newLastName.equals(updated.lastName()),
 				"The expected lastName value is not correct after update");
 
 		destroyJdbcTemplate(db);
@@ -58,17 +58,19 @@ public class JdbcTemplateTest {
 		ds.setPassword("");
 		JdbcTemplate template = new JdbcTemplate(ds);
 
-		Connection conn = ds.getConnection();
-		Statement stmt = conn.createStatement();
-		stmt.execute(Sql.resource("sql/JdbcTemplateTest/01_setup_query.sql"));
+		try (Connection conn = ds.getConnection(); Statement stmt = conn.createStatement()) {
+			stmt.execute(Sql.resource("sql/JdbcTemplateTest/01_setup_query.sql"));
+		}
 		return new Db(ds, template);
 	}
 
 	private void destroyJdbcTemplate(Db db) throws Exception {
 		JdbcDataSource ds = db.ds();
-		Connection conn = ds.getConnection();
-		Statement stmt = conn.createStatement();
-		stmt.execute("drop table fake_users");
+
+		try (Connection conn = ds.getConnection(); Statement stmt = conn.createStatement()) {
+			stmt.execute("drop table fake_users");
+		}
+		ds = null;
 	}
 
 	record User(String firstName, String lastName, String email) {
