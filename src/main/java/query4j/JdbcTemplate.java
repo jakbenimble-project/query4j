@@ -93,10 +93,8 @@ public class JdbcTemplate {
 	}
 
 	private void bind(PreparedStatement ps, Object[] params) throws SQLException {
-		for (int i = 0; i < params.length; i++) {
-			System.out.println(params[i].toString());
+		for (int i = 0; i < params.length; i++)
 			ps.setObject(i + 1, params[i]);
-		}
 	}
 
 	private PreparedStatement prepareStatement(Connection conn, String sql, Object... params) throws SQLException {
