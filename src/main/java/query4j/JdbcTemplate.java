@@ -37,8 +37,7 @@ public class JdbcTemplate {
 	}
 
 	public int update(String sql, Object... params) {
-		try (Connection conn = ds.getConnection()) {
-			PreparedStatement ps = prepareStatement(conn, sql, params);
+		try (Connection conn = ds.getConnection(); PreparedStatement ps = prepareStatement(conn, sql, params)) {
 			return ps.executeUpdate();
 		} catch (SQLException sqle) {
 			throw new QueryException(sqle);
@@ -50,9 +49,7 @@ public class JdbcTemplate {
 	}
 
 	public <T> Optional<T> queryOptional(String sql, RowMapper<T> mapper, Object... params) {
-		try (Connection conn = ds.getConnection()) {
-			PreparedStatement ps = prepareStatement(conn, sql, params);
-
+		try (Connection conn = ds.getConnection(); PreparedStatement ps = prepareStatement(conn, sql, params)) {
 			try (ResultSet rs = ps.executeQuery()) {
 				if (!rs.next())
 					return Optional.empty();
@@ -67,9 +64,7 @@ public class JdbcTemplate {
 	}
 
 	public <T> T queryOne(String sql, RowMapper<T> mapper, Object... params) {
-		try (Connection conn = ds.getConnection()) {
-			PreparedStatement ps = prepareStatement(conn, sql, params);
-
+		try (Connection conn = ds.getConnection(); PreparedStatement ps = prepareStatement(conn, sql, params)) {
 			try (ResultSet rs = ps.executeQuery()) {
 				if (!rs.next())
 					throw new NoResultException("queryOne returned no rows");
@@ -88,8 +83,7 @@ public class JdbcTemplate {
 	}
 
 	public int[] batchUpdate(String sql, List<Object[]> params) {
-		try (Connection conn = ds.getConnection()) {
-			PreparedStatement ps = conn.prepareStatement(sql);
+		try (Connection conn = ds.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 			for (Object[] row : params) {
 				bind(ps, row);
 				ps.addBatch();
@@ -101,8 +95,10 @@ public class JdbcTemplate {
 	}
 
 	private void bind(PreparedStatement ps, Object[] params) throws SQLException {
-		for (int i = 0; i < params.length; i++)
+		for (int i = 0; i < params.length; i++) {
+			System.out.println(params[i].toString());
 			ps.setObject(i + 1, params[i]);
+		}
 	}
 
 	private PreparedStatement prepareStatement(Connection conn, String sql, Object... params) throws SQLException {
