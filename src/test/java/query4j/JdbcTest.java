@@ -21,7 +21,7 @@ import query4j.exceptions.QueryException;
 public class JdbcTest {
 
 	@Test
-	public void testThat_Jdbc_query_successfullyReturns_expectedValues() throws Exception {
+	public void jdbc_query_successfullyReturns_expectedValues() throws Exception {
 		Jdbc jdbc = getJdbcKeepOpen();
 		List<User> users = jdbc.query("select * from fake_users", User.MAPPER);
 		assertFalse(users.isEmpty(), "Users value is empty");
@@ -32,7 +32,7 @@ public class JdbcTest {
 	}
 
 	@Test
-	public void testThat_Jdbc_update_successfullyUpdatesRow() throws Exception {
+	public void jdbc_update_successfullyUpdatesRow() throws Exception {
 		Jdbc jdbc = getJdbcKeepOpen();
 
 		String firstName = "olivia";
@@ -53,7 +53,7 @@ public class JdbcTest {
 	}
 
 	@Test
-	public void testThat_Jdbc_queryOne_successfullyReturnsOneRow() throws Exception {
+	public void jdbc_queryOne_successfullyReturnsOneRow() throws Exception {
 		Jdbc jdbc = getJdbcKeepOpen();
 		String userName = "peter";
 		User user = jdbc.queryOne("select * from fake_users where first_name = ?", User.MAPPER, userName);
@@ -61,7 +61,7 @@ public class JdbcTest {
 	}
 
 	@Test
-	public void testThat_Jdbc_queryOne_throws_NoResultException_forNoMatch() throws Exception {
+	public void jdbc_queryOne_throws_NoResultException_forNoMatch() throws Exception {
 		Jdbc jdbc = getJdbcKeepOpen();
 		String userName = "test";
 		assertThrows(NoResultException.class, () -> {
@@ -70,7 +70,7 @@ public class JdbcTest {
 	}
 
 	@Test
-	public void testThat_Jdbc_queryOne_throws_NonUniqueResultException_forMultipleMatches() throws Exception {
+	public void jdbc_queryOne_throws_NonUniqueResultException_forMultipleMatches() throws Exception {
 		Jdbc jdbc = getJdbcKeepOpen();
 		String userName = "bishop";
 		assertThrows(NonUniqueResultException.class, () -> {
@@ -79,7 +79,7 @@ public class JdbcTest {
 	}
 
 	@Test
-	public void testThat_Jdbc_queryOptional_successfullyReturnsEmptyOptional_When_NoRows() throws Exception {
+	public void jdbc_queryOptional_successfullyReturnsEmptyOptional_When_NoRows() throws Exception {
 		Jdbc jdbc = getJdbcKeepOpen();
 		String userName = "test";
 		Optional<User> user = jdbc.queryOptional("select * from fake_users where first_name = ?", User.MAPPER,
@@ -88,7 +88,7 @@ public class JdbcTest {
 	}
 
 	@Test
-	public void testThat_Jdbc_queryOptional_successfullyReturnsOneRow() throws Exception {
+	public void jdbc_queryOptional_successfullyReturnsOneRow() throws Exception {
 		Jdbc jdbc = getJdbcKeepOpen();
 		String userName = "walter";
 		User user = jdbc.queryOptional("select * from fake_users where first_name = ?", User.MAPPER, userName)
@@ -97,7 +97,7 @@ public class JdbcTest {
 	}
 
 	@Test
-	public void testThat_Jdbc_queryOptional_throws_NonUniqueResultException_forMultipleMatches() throws Exception {
+	public void jdbc_queryOptional_throws_NonUniqueResultException_forMultipleMatches() throws Exception {
 		Jdbc jdbc = getJdbcKeepOpen();
 		String userName = "bishop";
 		assertThrows(NonUniqueResultException.class, () -> {
@@ -106,7 +106,51 @@ public class JdbcTest {
 	}
 
 	@Test
-	public void testThat_Jdbc_methodCalls_throwQueryException_onDatabaseEmpty()
+	public void jdbc_queryValue_successfullyReturnsOneRow() throws Exception {
+		Jdbc jdbc = getJdbcKeepOpen();
+		Long count = jdbc.queryValue("select count(*) from fake_users", Long.class);
+		assertEquals(4, count, "Expected user count does not match");
+	}
+
+	@Test
+	public void jdbc_queryValue_throws_NoResultException_forNoMatch() throws Exception {
+		Jdbc jdbc = getJdbcKeepOpen();
+		assertThrows(NoResultException.class, () -> {
+			jdbc.queryValue("select first_name from fake_users where first_name = ?",
+					Long.class, "test");
+		}, "queryValue did not throw NoResultException");
+	}
+
+	@Test
+	public void jdbc_queryValue_throws_NonUniqueResultException_forMultipleMatches() throws Exception {
+		Jdbc jdbc = getJdbcKeepOpen();
+		assertThrows(NonUniqueResultException.class, () -> {
+			jdbc.queryValue("select first_name from fake_users", String.class);
+		}, "queryOne did not throw NonUniqueResultException");
+	}
+
+	@Test
+	public void jdbc_queryValue_throws_QueryException_for_scalarTypeMismatch() throws Exception {
+		Jdbc jdbc = getJdbcKeepOpen();
+		assertThrows(QueryException.class, () -> {
+			jdbc.queryValue("select count(first_name) from fake_users", User.class);
+		}, "queryOne did not throw QueryException");
+	}
+
+	@Test
+	public void jdbc_batchUpdate_successfully_updatesAllRows() throws Exception {
+		Jdbc jdbc = getJdbcKeepOpen();
+		List<User> users = jdbc.query("select * from fake_users", User.MAPPER);
+		List<Object[]> updateUsersList = users.stream()
+				.map(u -> new Object[] { u.firstName() + "@fbi.gov", u.firstName() })
+				.toList();
+		int[] results = jdbc.batchUpdate("update fake_users set email = ? where first_name = ?",
+				updateUsersList);
+		assertEquals(4, results.length, "Updated row count does not match expected");
+	}
+
+	@Test
+	public void jdbc_methodCalls_throwQueryException_onDatabaseEmpty()
 			throws Exception {
 		Jdbc jdbc = getJdbcAutoClose();
 		assertThrows(QueryException.class, () -> {
