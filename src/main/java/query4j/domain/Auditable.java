@@ -1,4 +1,4 @@
-package query4j;
+package query4j.domain;
 
 import java.time.Instant;
 
