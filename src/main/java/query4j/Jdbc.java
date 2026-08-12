@@ -14,10 +14,10 @@ import query4j.exceptions.NoResultException;
 import query4j.exceptions.NonUniqueResultException;
 import query4j.exceptions.QueryException;
 
-public class JdbcTemplate {
+public class Jdbc {
 	private final DataSource ds;
 
-	public JdbcTemplate(DataSource ds) {
+	public Jdbc(DataSource ds) {
 		this.ds = ds;
 	}
 
