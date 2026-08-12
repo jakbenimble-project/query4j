@@ -72,7 +72,7 @@ Now, we can run a basic query:
 ```java
 // Create a JDBC DataSource (Hikari, H2 JdbcDataSource, etc)...
 
-JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+Jdbc jdbc = new Jdbc(dataSource);
 List<User> users = jdbc.query("select * from users", User.MAPPER);
 
 for (User u : users)
