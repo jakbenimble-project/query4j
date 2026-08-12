@@ -8,11 +8,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 
+import query4j.exceptions.NoResultException;
+import query4j.exceptions.NonUniqueResultException;
 import query4j.exceptions.QueryException;
 
 public class JdbcTest {
@@ -47,6 +50,59 @@ public class JdbcTest {
 		User updated = jdbc.queryOne("select * from fake_users where first_name = ?", User.MAPPER, firstName);
 		assertTrue(newLastName.equals(updated.lastName()),
 				"The expected lastName value is not correct after update");
+	}
+
+	@Test
+	public void testThat_Jdbc_queryOne_successfullyReturnsOneRow() throws Exception {
+		Jdbc jdbc = getJdbcKeepOpen();
+		String userName = "peter";
+		User user = jdbc.queryOne("select * from fake_users where first_name = ?", User.MAPPER, userName);
+		assertEquals(userName, user.firstName(), "Expected user does not match");
+	}
+
+	@Test
+	public void testThat_Jdbc_queryOne_throws_NoResultException_forNoMatch() throws Exception {
+		Jdbc jdbc = getJdbcKeepOpen();
+		String userName = "test";
+		assertThrows(NoResultException.class, () -> {
+			jdbc.queryOne("select * from fake_users where first_name = ?", User.MAPPER, userName);
+		}, "queryOne did not throw NoResultException");
+	}
+
+	@Test
+	public void testThat_Jdbc_queryOne_throws_NonUniqueResultException_forMultipleMatches() throws Exception {
+		Jdbc jdbc = getJdbcKeepOpen();
+		String userName = "bishop";
+		assertThrows(NonUniqueResultException.class, () -> {
+			jdbc.queryOne("select * from fake_users where last_name = ?", User.MAPPER, userName);
+		}, "queryOne did not throw NonUniqueResultException");
+	}
+
+	@Test
+	public void testThat_Jdbc_queryOptional_successfullyReturnsEmptyOptional_When_NoRows() throws Exception {
+		Jdbc jdbc = getJdbcKeepOpen();
+		String userName = "test";
+		Optional<User> user = jdbc.queryOptional("select * from fake_users where first_name = ?", User.MAPPER,
+				userName);
+		assertTrue(user.isEmpty(), "Returned Optional<User> is not empty");
+	}
+
+	@Test
+	public void testThat_Jdbc_queryOptional_successfullyReturnsOneRow() throws Exception {
+		Jdbc jdbc = getJdbcKeepOpen();
+		String userName = "walter";
+		User user = jdbc.queryOptional("select * from fake_users where first_name = ?", User.MAPPER, userName)
+				.get();
+		assertEquals(userName, user.firstName(), "Expected user does not match");
+	}
+
+	@Test
+	public void testThat_Jdbc_queryOptional_throws_NonUniqueResultException_forMultipleMatches() throws Exception {
+		Jdbc jdbc = getJdbcKeepOpen();
+		String userName = "bishop";
+		assertThrows(NonUniqueResultException.class, () -> {
+			jdbc.queryOne("select * from fake_users where last_name = ?", User.MAPPER, userName);
+		}, "queryOptional did not throw NonUniqueResultException");
 	}
 
 	@Test
