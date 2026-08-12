@@ -2,6 +2,7 @@ package query4j;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.sql.Connection;
 import java.sql.Statement;
@@ -15,20 +16,19 @@ public class JdbcTemplateTest {
 
 	@Test
 	public void testThat_JdbcTemplate_query_successfullyReturns_expectedValues() throws Exception {
-		Db db = getJdbcTempate();
+		Db db = getJdbcTemplate();
 		JdbcTemplate jdbc = db.jdbc();
 		List<User> users = jdbc.query("select * from fake_users", User.MAPPER);
-		assertTrue(users.size() > 0);
-		assertTrue(users.get(0).firstName.equals("olivia"));
+		assertFalse(users.isEmpty());
+		assertEquals("olivia", users.get(0).firstName);
 
 		List<User> noResults = jdbc.query("select * from fake_users where first_name = ?", User.MAPPER, "test");
-		assertTrue(noResults.size() == 0);
-		destroyJdbcTemplate(db);
+		assertFalse(noResults.isEmpty());
 	}
 
 	@Test
 	public void testThat_JdbcTemplate_update_successfullyUpdatesRow() throws Exception {
-		Db db = getJdbcTempate();
+		Db db = getJdbcTemplate();
 		JdbcTemplate jdbc = db.jdbc();
 
 		String firstName = "olivia";
@@ -47,10 +47,9 @@ public class JdbcTemplateTest {
 		assertTrue(newLastName.equals(updated.lastName()),
 				"The expected lastName value is not correct after update");
 
-		destroyJdbcTemplate(db);
 	}
 
-	private Db getJdbcTempate() throws Exception {
+	private Db getJdbcTemplate() throws Exception {
 		JdbcDataSource ds = new JdbcDataSource();
 		UUID uuid = UUID.randomUUID();
 		ds.setURL("jdbc:h2:mem:" + uuid);
@@ -62,15 +61,6 @@ public class JdbcTemplateTest {
 			stmt.execute(Sql.resource("sql/JdbcTemplateTest/01_setup_query.sql"));
 		}
 		return new Db(ds, template);
-	}
-
-	private void destroyJdbcTemplate(Db db) throws Exception {
-		JdbcDataSource ds = db.ds();
-
-		try (Connection conn = ds.getConnection(); Statement stmt = conn.createStatement()) {
-			stmt.execute("drop table fake_users");
-		}
-		ds = null;
 	}
 
 	record User(String firstName, String lastName, String email) {
