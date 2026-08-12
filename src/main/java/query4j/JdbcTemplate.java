@@ -22,9 +22,7 @@ public class JdbcTemplate {
 	}
 
 	public <T> List<T> query(String sql, RowMapper<T> mapper, Object... params) {
-		try (Connection conn = ds.getConnection()) {
-			PreparedStatement ps = prepareStatement(conn, sql, params);
-
+		try (Connection conn = ds.getConnection(); PreparedStatement ps = prepareStatement(conn, sql, params)) {
 			try (ResultSet rs = ps.executeQuery()) {
 				List<T> results = new ArrayList<>();
 				while (rs.next())
