@@ -19,11 +19,11 @@ public class JdbcTemplateTest {
 		Db db = getJdbcTemplate();
 		JdbcTemplate jdbc = db.jdbc();
 		List<User> users = jdbc.query("select * from fake_users", User.MAPPER);
-		assertFalse(users.isEmpty());
-		assertEquals("olivia", users.get(0).firstName);
+		assertFalse(users.isEmpty(), "Users value is empty");
+		assertEquals("olivia", users.get(0).firstName, "user firstName does not match");
 
 		List<User> noResults = jdbc.query("select * from fake_users where first_name = ?", User.MAPPER, "test");
-		assertFalse(noResults.isEmpty());
+		assertTrue(noResults.isEmpty(), "noResults value contains a value");
 	}
 
 	@Test
@@ -41,7 +41,7 @@ public class JdbcTemplateTest {
 
 		int rowCount = jdbc.update("update fake_users set last_name = ? where first_name = ?", newLastName,
 				firstName);
-		assertEquals(1, rowCount);
+		assertEquals(1, rowCount, "update call did not return a value");
 
 		User updated = jdbc.queryOne("select * from fake_users where first_name = ?", User.MAPPER, firstName);
 		assertTrue(newLastName.equals(updated.lastName()),
@@ -52,7 +52,7 @@ public class JdbcTemplateTest {
 	private Db getJdbcTemplate() throws Exception {
 		JdbcDataSource ds = new JdbcDataSource();
 		UUID uuid = UUID.randomUUID();
-		ds.setURL("jdbc:h2:mem:" + uuid);
+		ds.setURL("jdbc:h2:mem:" + uuid + ";DB_CLOSE_DELAY=-1");
 		ds.setUser("sa");
 		ds.setPassword("");
 		JdbcTemplate template = new JdbcTemplate(ds);
