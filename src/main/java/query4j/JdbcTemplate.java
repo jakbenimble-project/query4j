@@ -81,7 +81,7 @@ public class JdbcTemplate {
 	}
 
 	public int[] batchUpdate(String sql, List<Object[]> params) {
-		try (Connection conn = ds.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+		try (Connection conn = ds.getConnection(); PreparedStatement ps = prepareStatement(conn, sql, params)) {
 			for (Object[] row : params) {
 				bind(ps, row);
 				ps.addBatch();
