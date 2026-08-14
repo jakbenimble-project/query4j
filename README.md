@@ -113,7 +113,7 @@ Optional<User> user = jdbc.queryOptional("select * from users where first_name =
 Need to update multiple rows?
 
 ```java
-List<User> updatedUsers = users.stream().map(
+List<Object[]> updatedUsers = users.stream().map(
                  u -> new Object[] {
                      u.firstName() + "@fbi.gov",
                      u.firstName()
