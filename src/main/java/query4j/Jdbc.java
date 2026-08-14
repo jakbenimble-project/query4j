@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +23,8 @@ public class Jdbc {
 	}
 
 	public <T> List<T> query(String sql, RowMapper<T> mapper, Object... params) {
-		try (Connection conn = ds.getConnection(); PreparedStatement ps = prepareStatement(conn, sql, params)) {
+		try (Connection conn = ds.getConnection();
+				PreparedStatement ps = prepareStatement(conn, sql, false, params)) {
 			try (ResultSet rs = ps.executeQuery()) {
 				List<T> results = new ArrayList<>();
 				while (rs.next())
@@ -35,7 +37,8 @@ public class Jdbc {
 	}
 
 	public int update(String sql, Object... params) {
-		try (Connection conn = ds.getConnection(); PreparedStatement ps = prepareStatement(conn, sql, params)) {
+		try (Connection conn = ds.getConnection();
+				PreparedStatement ps = prepareStatement(conn, sql, false, params)) {
 			return ps.executeUpdate();
 		} catch (SQLException sqle) {
 			throw new QueryException(sqle);
@@ -43,11 +46,24 @@ public class Jdbc {
 	}
 
 	public <K> K insert(String sql, Class<K> keyType, Object... params) {
-		throw new UnsupportedOperationException("Method call 'insert' not yet implemented.");
+		try (Connection conn = ds.getConnection();
+				PreparedStatement ps = prepareStatement(conn, sql, true, params)) {
+			bind(ps, params);
+			ps.executeUpdate();
+
+			try (ResultSet rs = ps.getGeneratedKeys()) {
+				if (!rs.next())
+					throw new QueryException("Insert did not return a generated key");
+				return rs.getObject(1, keyType);
+			}
+		} catch (SQLException sqle) {
+			throw new QueryException(sqle);
+		}
 	}
 
 	public <T> Optional<T> queryOptional(String sql, RowMapper<T> mapper, Object... params) {
-		try (Connection conn = ds.getConnection(); PreparedStatement ps = prepareStatement(conn, sql, params)) {
+		try (Connection conn = ds.getConnection();
+				PreparedStatement ps = prepareStatement(conn, sql, false, params)) {
 			try (ResultSet rs = ps.executeQuery()) {
 				if (!rs.next())
 					return Optional.empty();
@@ -62,7 +78,8 @@ public class Jdbc {
 	}
 
 	public <T> T queryOne(String sql, RowMapper<T> mapper, Object... params) {
-		try (Connection conn = ds.getConnection(); PreparedStatement ps = prepareStatement(conn, sql, params)) {
+		try (Connection conn = ds.getConnection();
+				PreparedStatement ps = prepareStatement(conn, sql, false, params)) {
 			try (ResultSet rs = ps.executeQuery()) {
 				if (!rs.next())
 					throw new NoResultException("queryOne returned no rows");
@@ -81,7 +98,8 @@ public class Jdbc {
 	}
 
 	public int[] batchUpdate(String sql, List<Object[]> params) {
-		try (Connection conn = ds.getConnection(); PreparedStatement ps = prepareStatement(conn, sql, params)) {
+		try (Connection conn = ds.getConnection();
+				PreparedStatement ps = prepareStatement(conn, sql, false, params)) {
 			for (Object[] row : params) {
 				bind(ps, row);
 				ps.addBatch();
@@ -97,8 +115,10 @@ public class Jdbc {
 			ps.setObject(i + 1, params[i]);
 	}
 
-	private PreparedStatement prepareStatement(Connection conn, String sql, Object... params) throws SQLException {
-		PreparedStatement ps = conn.prepareStatement(sql);
+	private PreparedStatement prepareStatement(Connection conn, String sql, boolean generatedKeys, Object... params)
+			throws SQLException {
+		PreparedStatement ps = generatedKeys ? conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+				: conn.prepareStatement(sql);
 		bind(ps, params);
 		return ps;
 	}
