@@ -113,7 +113,11 @@ Optional<User> user = jdbc.queryOptional("select * from users where first_name =
 Need to update multiple rows?
 
 ```java
-List<User> updatedUsers = users.stream().map(u -> new Object[] { u.firstName() + "@fbi.gov", u.firstName() }).toList();  // our users list from earlier...
+List<User> updatedUsers = users.stream().map(
+                 u -> new Object[] {
+                     u.firstName() + "@fbi.gov",
+                     u.firstName()
+                 }).toList();  // our users list from earlier...
 int[] rowCount = batchUpdate("update users set email = ? where first_name = ?", updatedUsers);
 
 // use the rowCount for whatever...
