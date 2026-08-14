@@ -67,6 +67,8 @@ public record User(String firstName, String lastName, String email) {
 }
 ```
 
+### query
+
 Now, we can run a basic query:
 
 ```java
@@ -78,6 +80,8 @@ List<User> users = jdbc.query("select * from users", User.MAPPER);
 for (User u : users)
     System.out.println(u.email());
 ```
+
+### queryOne
 
 Just need one?
 ```java
@@ -92,6 +96,8 @@ assert user.lastName().equals("dunham");
 | --- |
 | If `queryOne()` returns zero results, it will throw a `NoResultException`.  If more than one result, it will throw a `NonUniqueResultException`. |
 
+### queryOptional
+
 Not sure if you have a result?
 
 ```java
@@ -102,8 +108,20 @@ Optional<User> user = jdbc.queryOptional("select * from users where first_name =
 | --- |
 | `queryOptional()` returns `Optional.empty()` for no results and `NonUniqueResultException` for more than one. |
 
-Insert is an operation that expects to have a returned key type:
+### batchUpdate
 
+Need to update multiple rows?
+
+```java
+List<User> updatedUsers = users.stream().map(u -> new Object[] { u.firstName() + "@fbi.gov", u.firstName() }).toList();  // our users list from earlier...
+int[] rowCount = batchUpdate("update users set email = ? where first_name = ?", updatedUsers);
+
+// use the rowCount for whatever...
+```
+
+### insert
+
+Insert is an operation that expects to have a returned key type:
 
 ```sql
 -- create a new table
@@ -121,6 +139,7 @@ Long id = jdbc.insert("insert into fruit (name, type) values (?, ?)", Long.class
 
 // Do something with the ID that gets returned.
 ```
+
 | **NOTE:** |
 | --- |
 | `insert()` will throw a `QueryException` in the event that it doesn't get an ID back. |
