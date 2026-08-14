@@ -150,6 +150,39 @@ public class JdbcTest {
 	}
 
 	@Test
+	public void jdbc_insert_throws_QueryException_when_noIdIsReturned() throws Exception {
+		Jdbc jdbc = getJdbcKeepOpen();
+		assertThrows(QueryException.class, () -> {
+			jdbc.insert("insert into fake_users (first_name, last_name, email) values (?, ?, ?)",
+					Long.class, "william", "bell", "bill@massivdynamic.com");
+		}, "insert did not throw a QueryException for operation that did not return an ID");
+	}
+
+	@Test
+	public void jdbc_insert_successfullyReturns_id() throws Exception {
+		JdbcDataSource ds = new JdbcDataSource();
+		UUID uuid = UUID.randomUUID();
+		ds.setURL("jdbc:h2:mem:" + uuid);
+		ds.setUser("sa");
+		ds.setPassword("");
+		Jdbc jdbc = new Jdbc(ds);
+		String createTable = "create table if not exists fake_users_with_id (id int primary key auto_increment, first_name varchar(25), last_name varchar(25), email varchar(25))";
+
+		Long id = 0L;
+
+		try (Connection conn = ds.getConnection(); Statement stmt = conn.createStatement()) {
+			stmt.execute(createTable);
+			id = jdbc.insert(
+					"insert into fake_users_with_id (first_name, last_name, email) values (?, ?, ?)",
+					Long.class, "william",
+					"bell",
+					"belly@massivedynamic.com");
+		}
+
+		assertTrue(id > 0, "insert operation did not return a valid ID");
+	}
+
+	@Test
 	public void jdbc_methodCalls_throwQueryException_onDatabaseEmpty()
 			throws Exception {
 		Jdbc jdbc = getJdbcAutoClose();
