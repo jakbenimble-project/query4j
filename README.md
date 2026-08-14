@@ -102,4 +102,52 @@ Optional<User> user = jdbc.queryOptional("select * from users where first_name =
 | --- |
 | `queryOptional()` returns `Optional.empty()` for no results and `NonUniqueResultException` for more than one. |
 
+Insert is an operation that expects to have a returned key type:
 
+
+```sql
+-- create a new table
+create table fruit (
+  id int primary key auto_increment,
+  name varchar(20),
+  type varchar(20)
+);
+```
+
+```java
+// Get the data source for this new table/database. Pass it to Jdbc.
+Jdbc jdbc = new Jdbc(fruitDataSource);
+Long id = jdbc.insert("insert into fruit (name, type) values (?, ?)", Long.class, "orange", "citrus");
+
+// Do something with the ID that gets returned.
+```
+| **NOTE:** |
+| --- |
+| `insert()` will throw a `QueryException` in the event that it doesn't get an ID back. |
+
+An ID can be whatever type you need (Long, Int, UUID, etc).
+
+## Domain Helpers
+
+These are strictly optional and are provided solely for convenience.
+
+| Interface | Purpose |
+| --- | --- |
+| Auditable | Adds `Instant updatedAt` and `Instant createdAt` |
+| Identifiable | Adds `UUID uuid` |
+| Sequenceable | Adds `Long id` |
+
+Use these with your records:
+
+```java
+import query4j.domain.Auditable;
+
+public record User(String username, String password, Instant createdAt, Instant updatedAt) implements Auditable {
+    static final RowMapper<User> MAPPER = rs -> new User(
+                    rs.getString("username"),
+                    rs.getString("password"),
+                    rs.getObject("created_at", Instant.class),
+                    rs.getObject("updated_at", Instant.class)
+                    );
+}
+```
