@@ -28,7 +28,7 @@ public class Jdbc {
 			try (ResultSet rs = ps.executeQuery()) {
 				List<T> results = new ArrayList<>();
 				while (rs.next())
-					results.add(mapper.map(rs));
+					results.add(mapper.mapRow(rs));
 				return results;
 			}
 		} catch (SQLException sqle) {
@@ -67,7 +67,7 @@ public class Jdbc {
 			try (ResultSet rs = ps.executeQuery()) {
 				if (!rs.next())
 					return Optional.empty();
-				T result = mapper.map(rs);
+				T result = mapper.mapRow(rs);
 				if (rs.next())
 					throw new NonUniqueResultException("queryOptional returned more than one row");
 				return Optional.of(result);
@@ -83,7 +83,7 @@ public class Jdbc {
 			try (ResultSet rs = ps.executeQuery()) {
 				if (!rs.next())
 					throw new NoResultException("queryOne returned no rows");
-				T result = mapper.map(rs);
+				T result = mapper.mapRow(rs);
 				if (rs.next())
 					throw new NonUniqueResultException("queryOne returned more than one row");
 				return result;
