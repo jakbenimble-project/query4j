@@ -58,12 +58,13 @@ We can add a mapper directly to the User record:
 
 ```java
 public record User(String firstName, String lastName, String email) {
-    static final RowMapper<User> MAPPER = rs ->
+    static final RowMapper<User> MAPPER = rs -> {
         new User(
             rs.getString("first_name"),
             rs.getString("last_name"),
             rs.getString("email")
         );
+    };
 }
 ```
 
